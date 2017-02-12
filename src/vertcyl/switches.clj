@@ -48,8 +48,8 @@
        (translate [x y z])))
 
 (defn grid-cutter
-  [cutter-type]
-  (let [points (grid 85 
+  [radius cutter-type]
+  (let [points (grid radius
                      :rows 5 
                      :columns 6 
                      :offset-rows 4 
@@ -64,11 +64,11 @@
 
 (defn render!
   []
-  (spit "mx-cutter.scad"
+  (spit "out/mx-cutter.scad"
         (write-scad mx-cutter))
-  (spit "matias-cutter.scad"
+  (spit "out/matias-cutter.scad"
         (write-scad matias-cutter))
-  (spit "grid-test.scad"
-        (write-scad (grid-cutter :mx))))
+  (spit "out/grid-test.scad"
+        (write-scad (grid-cutter 85 :mx))))
 
 (render!)
