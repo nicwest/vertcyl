@@ -27,7 +27,7 @@
         da (- max-a min-a)
         ;column spacing
         max-b (/ Math/PI 2)
-        min-b (/ Math/PI 8)
+        min-b (/ Math/PI 9)
         db (- max-b min-b)
         icolumn (/ da columns)
         icol (/ db rows)]
@@ -50,9 +50,9 @@
 (defn grid-cutter
   [radius cutter-type]
   (let [points (grid radius
-                     :rows 5 
-                     :columns 6 
-                     :offset-rows 4 
+                     :rows 4 
+                     :columns 5 
+                     :offset-rows 3 
                      :offset-columns 0.5 
                      :side :left)
         cutter (cond 
@@ -69,6 +69,6 @@
   (spit "out/matias-cutter.scad"
         (write-scad matias-cutter))
   (spit "out/grid-test.scad"
-        (write-scad (grid-cutter 85 :mx))))
+        (write-scad (grid-cutter 90 :mx))))
 
 (render!)
