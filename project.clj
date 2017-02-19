@@ -4,6 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.clojure/math.numeric-tower "0.0.4"] 
                  [scad-clj "0.5.2"]]
   :main ^:skip-aot vertcyl.core
   :target-path "target/%s"

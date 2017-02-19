@@ -19,56 +19,23 @@
 (def matias-cutter
   (cube  12.8 15.5 15.6))
 
-(defn grid
-  [radius & {:keys [columns rows offset-columns offset-rows side]}]
-  (let [;col spacing
-        max-a (/ Math/PI 2)
-        min-a  0
-        da (- max-a min-a)
-        ;column spacing
-        max-b (/ Math/PI 2)
-        min-b (/ Math/PI 9)
-        db (- max-b min-b)
-        icolumn (/ da columns)
-        icol (/ db rows)]
-    (for [column (range columns)
-          col (range rows)]
-      (let [a (* icolumn (+ column offset-columns))
-            b (* icol (+ col offset-rows))
-            x (* (Math/sin b) (Math/cos a) radius)
-            y (* (Math/sin a) (Math/sin b) radius)
-            z (* (Math/cos b) radius)]
-        [x y z a b]))))
+(defn cutter
+  [switch]
+  (cond
+    (= switch :mx) mx-cutter
+    (= switch :matias) matias-cutter))
 
-(defn place-cutter
-  [cutter [x y z ax az]]
-  (->> cutter
-       (rotate az [0 1 0])
-       (rotate ax [0 0 1])
-       (translate [x y z])))
-
-(defn grid-cutter
-  [radius cutter-type]
-  (let [points (grid radius
-                     :rows 4 
-                     :columns 5 
-                     :offset-rows 3 
-                     :offset-columns 0.5 
-                     :side :left)
-        cutter (cond 
-                 (= cutter-type :matias)
-                 matias-cutter
-                 :else
-                 mx-cutter)]
-    (apply union (map (partial place-cutter cutter) points))))
+(defn padding
+  [switch]
+  (cond
+    (= switch :mx) [24 22]
+    (= switch :matias) [20 20]))
 
 (defn render!
   []
   (spit "out/mx-cutter.scad"
         (write-scad mx-cutter))
   (spit "out/matias-cutter.scad"
-        (write-scad matias-cutter))
-  (spit "out/grid-test.scad"
-        (write-scad (grid-cutter 90 :mx))))
+        (write-scad matias-cutter)))
 
 (render!)
