@@ -6,13 +6,33 @@
 
 (def thickness 3)
 
-(defn material
-  [radius switch]
-  (let [[width _] (padding switch)]
-
-    (difference
-      (cylinder radius width)
-      (cylinder (- radius thickness) (+ width thickness)))))
+(defn single-hole
+  [radius step offset switch width height n]
+  (let [a (+ offset (* step n))
+        x (* (Math/sin a) (- radius thickness))
+        y (* (Math/cos a) (- radius thickness))
+        inside-width (- width (* thickness 2))
+        inside-height (+ height (* thickness 2))
+        inside-x (* (Math/sin a) (+ radius (/ inside-height 2) (- (* 2 thickness))))
+        inside-y (* (Math/cos a) (+ radius (/ inside-height 2) (- (* 2 thickness))))
+        ]
+    (union
+      (difference 
+        (->> (cube height thickness width)
+             (rotate a [0 0 -1])
+             (translate [x y 0]))
+        (->> (cutter switch)
+             (rotate (/ Math/PI 2) [1 0 0])
+             (rotate a [0 0 -1])
+             (translate [x y 0])))
+      (->> (difference
+        (cube height width width)
+        (cube inside-width inside-width inside-height))
+             (rotate (/ Math/PI 2) [1 0 0])
+             (rotate a [0 0 -1])
+             (translate [inside-x inside-y 0]))
+      
+      )))
 
 (defn get-step
   [radius switch]
@@ -21,62 +41,27 @@
         n (/ circum height) ]
     (/ (* Math/PI 2) n)))
 
-(defn cutters
-  [radius switch columns]
-  (let [step (get-step radius switch)
-        offset (/ step 2)
-        placer (fn [n]
-                 (let [a (+ offset (* step n))]
-                   (->> (cutter switch)
-                        (rotate (/ Math/PI 2) [1 0 0])
-                        (rotate a [0 0 -1])
-                        (translate [(* (Math/sin a) radius)
-                                    (* (Math/cos a) radius)
-                                    0]))))]
-    (map placer (range columns))))
-
-(defn add-switch-holes
-  [radius switch columns block]
-    (apply difference block (cutters radius switch columns)))
-
-(defn trimmer-block
-  [radius switch n]
-  (let [[width height] (padding switch)
-        step (get-step radius switch)
-        offset (/ step 2)
-        a (+ offset (* step n))]
-    (->> (cube width (+ radius thickness) (+ height thickness))
-         (translate  [0 (/ radius 2) 0])
-         (rotate a [0 0 -1]))))
-
-(defn trimmer 
-  [radius switch columns]
-  (let [[width _] (padding switch)]
-  (difference
-    (cylinder (+ thickness radius) (+ thickness width))
-    (apply union
-           (map #(trimmer-block radius switch %) (range columns))))))
-
-(defn trim
-  [radius switch columns block]
-  (difference
-    block
-    (trimmer radius switch columns)))
-
 
 (defn row-with-switches
  [radius switch columns]
- (->> (material radius switch)
-      (add-switch-holes radius switch columns)
-      (trim radius switch columns)))
+  (let [[width height] (padding switch)
+        step (get-step radius switch)
+        offset (/ step 2)]
+    (apply union (map #(single-hole radius step offset switch width height %) 
+                      (range columns)))))
 
 (defn render!
   []
-  (spit "out/row-material.scad"
-        (write-scad (material 90 :mx)))
-  (spit "out/row-cutters.scad"
-        (write-scad (cutters 90 :mx 5)))
-  (spit "out/row-with-switches.scad"
-        (write-scad (row-with-switches 90 :mx 2))))
+  (let [radius 120
+        switch :mx
+        [width height] (padding switch)
+        step (get-step radius switch)
+        offset (/ step 2)
+        columns 5 
+        n 4 ]
+    (spit "out/row-with-switches.scad"
+          (write-scad (row-with-switches radius switch columns)))
+    (spit "out/row-single-hole.scad"
+          (write-scad (single-hole radius step offset switch width height n)))))
 
 (render!)

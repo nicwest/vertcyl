@@ -28,7 +28,7 @@
 (defn padding
   [switch]
   (cond
-    (= switch :mx) [24 22]
+    (= switch :mx) [22 22]
     (= switch :matias) [20 20]))
 
 (defn render!
