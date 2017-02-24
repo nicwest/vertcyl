@@ -20,25 +20,6 @@
              (rotate a [0 0 -1])
              (translate [x y 0])))))
 
-(defn single-cutter
-  [radius depth step width height n]
-  (let [ a (* step n)
-        x (* (Math/sin a) radius)
-        y (* (Math/cos a) radius)]
-      (union 
-        (->> (cube height (+ depth radius) width)
-             (translate [0 (/ (+ depth radius) 2) 0])
-             (rotate a [0 0 -1]))
-        (->> (cube radius (+ depth thickness) (- width thickness))
-             (translate [0 (/ (+ depth thickness) 2) 0])
-             (rotate a [0 0 -1])
-             (translate [x y 0]))
-        (->> (cube (- height thickness) (+ depth thickness) radius)
-             (translate [0 (/ (+ depth thickness) 2) 0])
-             (rotate a [0 0 -1])
-             (translate [x y 0]))
-        )))
-
 (defn get-column-step
   [radius switch]
   (let [[_ height] (padding switch)
@@ -67,15 +48,6 @@
         step (get-column-step radius switch)]
     (->> 
       (apply union (map #(single-hole radius step switch width height %) 
-                        (range columns)))
-      (normalise-row radius columns step width height))))
-
-(defn row-cutter
- [radius depth switch columns]
-  (let [[width height] (padding switch)
-        step (get-column-step radius switch)]
-    (->>
-      (apply union (map #(single-cutter radius depth step width height %) 
                         (range columns)))
       (normalise-row radius columns step width height))))
 
