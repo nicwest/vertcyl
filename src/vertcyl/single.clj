@@ -3,119 +3,97 @@
                                     union]]
             [scad-clj.scad :refer [write-scad]]))
 
-
-
 (def width 22)
 (def height 22)
-
-(def switch-cutter
-  (let [extra (cube 3.5 15.6 15.6)
-        angle (/ Math/PI 2)]
-    (union
-        (cube 14 14 14)
-        (translate [4.0 0 0] extra)
-        (translate [-4.0 0 0] extra)
-        (->> extra
-             (rotate angle [0 0 1])
-             (translate [0 4 0]))
-        (->> extra
-             (rotate angle [0 0 1])
-             (translate [0 -4 0])))))
-
-
-(def radius 120)
+(def radius 140)
+(def plate-thickness 3)
+(def wall-thickness 5.5)
+(def wall-height 10)
+(def shell-width (+ width wall-thickness))
+(def shell-height (+ height wall-thickness))
+(def shell-thickness 30)
 (def diameter (* radius 2))
 (def rows 4)
 (def columns 5)
-(def thickness 5)
-
-
 (def cirum (* Math/PI 2 radius))
 (def step (/ (* Math/PI 2) (/ cirum width)))
 (def offset (/ step 2))
 
+(def switch-cutter
+  (let [extra (cube 3.5 15.6 radius)
+        angle (/ Math/PI 2)]
+    (->> (union
+           (cube 14 14 radius)
+           (translate [4.0 0 0] extra)
+           (translate [-4.0 0 0] extra)
+           (->> extra
+                (rotate angle [0 0 1])
+                (translate [0 4 0]))
+           (->> extra
+                (rotate angle [0 0 1])
+                (translate [0 -4 0])))
+         (translate [0 0 (+ (/ radius 2) (* 2 plate-thickness))])
+         (rotate angle [-1 0 0]))))
 
-(def switch-plate
-  (union
-    (->> (cylinder 2/3 15)
-         (rotate (/ Math/PI 2) [0 1 0]))
-    (difference
-      (cube (+ width 2) (+ height 1) thickness)
-      switch-cutter)))
+(def plate-cutter
+  (->> (cube width height radius)
+       (translate [0 0 (/ radius 2)])
+       (rotate (/ Math/PI 2) [-1 0 0])))
 
-(def shell-plate
-  (->> (cube (+ width 7) (+ height 7) (* thickness 6))
-       (translate [0 0 (- (* thickness 3))])))
+(def shell-block
+  (->> (cube shell-width shell-height shell-thickness)
+       (translate [0 0 (+ (/ shell-thickness 2)
+                          radius)])
+       (rotate (/ Math/PI 2) [-1 0 0])))
 
-(defn on-sphere
-  [n]
-  (let [a (+ (* step n) offset)
+(def shell-cutter
+  (->> 
+    (union
+      (cube width height shell-thickness)
+      (cube (- width wall-height)
+            (+ height wall-height)
+            shell-thickness)
+      (cube (+ width wall-height)
+            (- height wall-height)
+            shell-thickness))
+    (translate [0 0 (+ (/ shell-thickness 2)
+                       radius
+                       plate-thickness)])
+    (rotate (/ Math/PI 2) [-1 0 0])))
+
+(def single-switch
+  (difference
+    shell-block
+    shell-cutter
+    plate-cutter
+    switch-cutter))
+
+(defn place-switch
+  [row column block]
+  (let [a (+ offset (* column step))
+        b (+ (/ offset 2) (* row offset))
         x (* (Math/sin a) radius)
         y (* (Math/cos a) radius)]
-    [a x y]))
+    (->> block
+         (translate [x y 0])
+         (rotate a [0 0 1])
+         (rotate (/ Math/PI 2) [0 1 0])
+         (rotate b [0 0 1])
+         )))
 
-(defn row-generator
-  [block]
-  (apply union 
-         (for [column (range (- (/ columns 2)) (/ columns 2))]
-           (let [[a x y] (on-sphere column)]
-             (->> block
-                  (rotate (/ Math/PI 2) [1 0 0])
-                  (rotate a [0 0 -1])
-                  (translate [x y 0]))))))
-
-
-(def switch-row
-  (row-generator switch-plate))
-
-(def shell-row
-  (row-generator shell-plate))
-
-
-(defn set-generator
-  [block]
-  (apply union
-         (for [row (range (- (/ rows 2)) (/ rows 2))]
-           (let [[a z _] (on-sphere row)]
-             (->> block
-                  (rotate (/ Math/PI 2) [0 1 0])
-                  (rotate a [0 0 -1]))))))
-
-(def switch-set
-  (set-generator switch-row))
-
-(def shell-set
-  (set-generator shell-row))
-
-(def trimmed-shell
-  (difference
-    shell-set
-    (->> (cube (* radius 2) (* radius 2) (* radius 2))
-         (translate [0 radius (* radius 34/23)]))
-    (->> (cube (* radius 2) (* radius 2) (* radius 2))
-         (translate [0 radius (- (* radius 34/23))]))
-    (->> (cube (* radius 2) (* radius 2) (* radius 2))
-         (translate [(* radius 15/11) radius 0]))
-    (->> (cube (* radius 2) (* radius 2) (* radius 2))
-         (translate [(- (* radius 15/11)) radius 0]))
-    (->> (cube (* radius 2) (* radius 2) (* radius 2))
-         (translate [0 (+ (* radius 2) thickness) 0]))
-    ))
-
-
-(def walled-shell
-  (let [shell-width (/ (+ (* radius 34/23) (- (* 2 thickness))) 2)
-        shell-height (* radius 11/12)]
-    (difference
-      trimmed-shell
-      (->> (cube shell-width radius shell-height)
-           (translate [0 radius 0])))))
-
-
-(def single-complete
+(def single-uncut
   (union
-    switch-set
-    walled-shell))
+    (for [row (range (- (/ rows 2)) (/ rows 2))
+          column (range (- (/ columns 2)) (/ columns 2))]
+      (place-switch row column single-switch))))
+
+(def single-cut
+  (difference
+    single-uncut
+    (->> 
+      (cube radius radius radius)
+      (translate [0 (+ (* radius 5/2)
+                       plate-thickness)]))))
 
 (defn render-part!
   [[filename part]]
@@ -127,15 +105,13 @@
   (dorun 
     (map render-part!
          {"switch-cutter" switch-cutter
-          "switch-plate" switch-plate
-          "switch-row" switch-row
-          "switch-set" switch-set
-          "single-complete" single-complete
-          "shell-plate" shell-plate
-          "shell-row" (union switch-row shell-row)
-          "shell-set" (union switch-set shell-set)
-          "trimmed-shell" trimmed-shell
-          "walled-shell" walled-shell})))
+          "plate-cutter" plate-cutter
+          "shell-block" shell-block
+          "shell-cutter" shell-cutter
+          "single-switch" single-switch
+          "single-uncut" single-uncut
+          "single-cut" single-cut
+          })))
 
 
 (render!)
