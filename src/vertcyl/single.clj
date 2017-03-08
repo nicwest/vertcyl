@@ -72,7 +72,11 @@
       (->> (cube shell-thickness 150 200)
            (translate [-79 240 0]))
       (->> (cube 150 shell-thickness 200)
-           (translate [-20 204 0])))
+           (translate [-20 204 0]))
+
+    (->> (cube 123 83 shell-thickness)
+         (translate [-18 244.5 -52.5]))
+      )
     (->> (sphere (* radius 2))
          (scale [1 1 0.75])
          (rotate (/ Math/PI 3) [0 0 -1])
@@ -150,7 +154,9 @@
                 finger-cutter 
                 thumb-cutter)
     finger-support
-    thumb-support))
+    thumb-support
+         )
+    )
 
 (defn render-part!
   [[filename part]]
