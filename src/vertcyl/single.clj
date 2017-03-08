@@ -61,26 +61,13 @@
 (def shell
   (difference
     (union
-      (difference 
-        (->> (difference
-               (sphere (+ (* radius 2) plate-thickness 2))
-               (sphere (* radius 2)))
-             (scale [1 1 0.75]))
-        (->> (sphere (+ (* radius 2) plate-thickness 2))
-             (scale [1 1 0.75])
-             (rotate (/ Math/PI 3) [0 0 -1])
-             (rotate (/ Math/PI 6) [0 1 0])
-             (translate [-240 150 115])))
-      (difference
-        (->> (difference
-               (sphere (+ (* radius 2) plate-thickness 2))
-               (sphere (* radius 2)))
-             (scale [1 1 0.75])
-             (rotate (/ Math/PI 3) [0 0 -1])
-             (rotate (/ Math/PI 6) [0 1 0])
-             (translate [-240 150 115]))
-        (->> (sphere (+ (* radius 2)))
-             (scale [1 1 0.75])))
+      (->> (sphere (+ (* radius 2) plate-thickness 2))
+           (scale [1 1 0.75]))
+      (->> (sphere (+ (* radius 2) plate-thickness 2))
+           (scale [1 1 0.75])
+           (rotate (/ Math/PI 3) [0 0 -1])
+           (rotate (/ Math/PI 6) [0 1 0])
+           (translate [-237 135 107]))
 
       (->> (cube shell-thickness 150 200)
            (translate [-79 240 0]))
@@ -90,7 +77,7 @@
          (scale [1 1 0.75])
          (rotate (/ Math/PI 3) [0 0 -1])
          (rotate (/ Math/PI 6) [0 1 0])
-         (translate [-240 150 115]))
+         (translate [-237  135 107]))
     (->> (sphere (* radius 2))
          (scale [1 1 0.75]))
     (->> (cube (* radius 4) (* radius 6) (* radius 6))
@@ -107,12 +94,12 @@
          (translate [0 616 0]))
     (->> (cube (* radius 4) (* radius 4.35) (* radius 6))
          (rotate (/ Math/PI 3) [0 0 -1])
-         (rotate (/ Math/PI 6) [0 1 0])
-         (translate [0 0 419]))
+         (rotate (/ Math/PI 12) [1 0 0])
+         (translate [-6 40 351]))
     (->> (cube (* radius 6) (* radius 6) (* radius 6))
          (rotate (/ Math/PI 3) [0 0 -1])
          (rotate (/ Math/PI 6) [0 1 0])
-         (translate [0 723 0])))) 
+         (translate [0 703 0])))) 
 
 (def shell-cutter
   (union plate-cutter switch-cutter))
@@ -145,7 +132,7 @@
 
        (rotate (/ Math/PI 3) [0 0 -1])
        (rotate (/ Math/PI 6) [0 1 0])
-       (translate [-240 150 115])))
+       (translate [-237 135 107])))
 
 (def thumb-support
   (->> (union
@@ -155,7 +142,7 @@
          (place-switch 0 0.5 switch-support))
        (rotate (/ Math/PI 3) [0 0 -1])
        (rotate (/ Math/PI 6) [0 1 0])
-       (translate [-240 150 115])))
+       (translate [-237 135 107])))
 
 (def hand
   (union
