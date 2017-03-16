@@ -1,7 +1,7 @@
 The Vertcyl Keyboard
 ====================
 
-Vertical keyboard inspired by the [Dactyl Keyboard](https://github.com/robertdale/dactyl-keyboard)
+Vertical keyboard inspired by the [Dactyl Keyboard](https://github.com/adereth/dactyl-keyboard)
 
 License
 -------
