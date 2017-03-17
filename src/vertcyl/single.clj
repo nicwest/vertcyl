@@ -5,9 +5,9 @@
 
 (def width 21)
 (def height 21)
-(def radius 110)
+(def radius 100)
 (def plate-thickness 3)
-(def wall-thickness 10)
+(def wall-thickness 8)
 (def finger-rows 4)
 (def finger-columns 5)
 (def thumb-upper-rows 3)
@@ -26,6 +26,7 @@
 (def thumb-y 35)
 (def thumb-z 20)
 (def shell-gap 10)
+(def overall-height 104)
 
 (def switch-cutter
   (let [extra (cube 3.5 15.6 40)
@@ -52,6 +53,11 @@
        (rotate (/ Math/PI 2) [-1 0 0])
        (translate [0 (- (/ wall-thickness 2)) 0])))
 
+(def shell-plate-u10
+  (->> (cube (+ width plate-thickness) (+ height plate-thickness) plate-thickness)
+       (rotate (/ Math/PI 2) [-1 0 0])
+       (translate [0 (- (/ plate-thickness 2) wall-thickness ) 0])))
+
 (def finger-cutter-u10
   (->> (cube width height (* wall-thickness 2))
        (rotate (/ Math/PI 2) [-1 0 0])
@@ -61,6 +67,11 @@
   (->> (cube width (* height 1.45) wall-thickness)
        (rotate (/ Math/PI 2) [-1 0 0])
        (translate [0 (- 0 (/ wall-thickness 2) plate-thickness) 0])))
+
+(def end-cutter-u10
+  (->> (cube (+ width plate-thickness) (+ height plate-thickness) shell-thickness)
+       (rotate (/ Math/PI 2) [-1 0 0])
+       (translate [0 (- shell-thickness) 0])))
 
 (def switch-support
   (->> (cylinder 0.5 15)
@@ -114,7 +125,9 @@
 (defn place-all-thumb-blocks
   [upper-block lower-block]
   (let [half-upper-rows (/ thumb-upper-rows 2)
-        half-lower-rows (/ thumb-lower-rows 2)]
+        half-lower-rows (/ thumb-lower-rows 2)
+        half-rows (/ finger-rows 2)
+        half-columns (/ finger-columns 2)]
     (union
       (for [row (range (- half-upper-rows) half-upper-rows) ]
         (place-u10-block row -0.5 upper-block))
@@ -131,60 +144,88 @@
     (place-u10-block 0.5 1 block)
     (place-u10-block 0.5 -2 block)))
 
+(defn place-all-finger-shells
+  [shell-block]
+  (let [half-rows (/ finger-rows 2)
+        half-columns (/ finger-columns 2)]
+    (list
+      (for [row (range (- half-rows) half-rows)
+            column [-3.5 2.5]]
+        (place-u10-block row column shell-block)))))
+
+(defn place-all-thumb-shells
+  [shell-block]
+  (for [row [-1.5 -0.5]
+        column [-3.5 -2.5 1.5 2.5]]
+    (->> shell-block
+         (place-u10-block row column)
+         (rotate (/ Math/PI 2) [0 1 0]))))
+
 (def fingers
   (->> 
-  (difference
-    (union (place-all-finger-blocks wall-plate-u10)
-           )
-    (place-all-finger-blocks finger-cutter-u10)
-    (place-all-finger-blocks switch-cutter)
-    )
-  )
-  )
+    (difference
+      (union (place-all-finger-blocks wall-plate-u10)
+             (place-all-finger-shells shell-plate-u10))
+      (place-all-finger-blocks finger-cutter-u10)
+      (place-all-finger-blocks switch-cutter))))
 
 (def thumbs
+  (difference
     (union
-      (place-all-thumb-blocks wall-plate-u10 wall-plate-u15)))
+      (place-all-thumb-blocks wall-plate-u10 wall-plate-u15)
+      (place-all-thumb-shells shell-plate-u10))
+    (place-all-thumb-blocks finger-cutter-u10 finger-cutter-u15)
+    (place-all-thumb-blocks switch-cutter switch-cutter)))
 
 
 (def shell-block
   (->> (cube width (+ height plate-thickness) shell-thickness)
        (rotate (/ Math/PI 2) [1 0 0])
-       (translate [0 (+ (/ shell-thickness 2) thumb-y) 0])
-       ))
+       (translate [0 (+ (/ shell-thickness 2) thumb-y) 0])))
 
 (defn place-row-10u-blocks
-  [block row column]
+  [row block]
   (let [half-columns (/ finger-columns 2)]
-    (for [row (range (- half-columns) half-columns)]
-    (place-u10-block row -0.5 block))))
-
-(def shell-end
-(->> (difference (cylinder wall-thickness 104)
-                            (->> (cube 100 100 110)
-                                 (translate [-50 0 0])))
-                (scale [1 3 1])
-                (rotate (/ Math/PI 2) [0 1 0])
-                (translate [0 0 (- (/ width 2))])
-                (place-u10-block 1 -0.5))
-  )
+    (for [column (range (- half-columns) half-columns)]
+      (place-u10-block row column block))))
 
 (defn place-reverse-block
   [block]
   (->> block
-         (translate [0 (- radius) 0])
-         (rotate Math/PI [0 0 1])
-         (rotate Math/PI [0 1 0])
-         (translate [0 (+ shell-gap) 0])
-         (place-u10-block 1 -0.5))
-  )
+       (translate [0 (- radius) 0])
+       (rotate Math/PI [0 0 1])
+       (rotate Math/PI [0 1 0])
+       (translate [0 (+ shell-gap) 0])
+       (place-u10-block 1 -0.5)))
 
+(def shell-end
+  (difference
+    (->> (cube plate-thickness (+ wall-thickness shell-gap) overall-height)
+         (scale [1 2.9 1])
+         (rotate (/ Math/PI 2) [0 1 0])
+         (translate [0 (/ shell-gap 2) (- (/ width 2))])
+         (place-u10-block 1 -0.5))
+
+    (place-row-10u-blocks 1.5 end-cutter-u10)
+    (->> end-cutter-u10 
+         (place-row-10u-blocks 0.5)
+         (rotate (/ Math/PI 2) [0 1 0])
+         (place-reverse-block))))
 
 (def complete
-  (union
-    fingers 
-    shell-end
-    (place-reverse-block thumbs)
+  (difference
+    (union
+      fingers 
+      shell-end
+      (place-reverse-block thumbs))
+    (->> (cube (* overall-height 2) overall-height overall-height)
+         (translate [0 0 overall-height])
+         (translate [0 (+ radius shell-gap) 0])
+         )
+    (->> (cube (* overall-height 2) overall-height overall-height)
+         (translate [0 0 (- overall-height)])
+         (translate [0 (+ radius shell-gap) 0])
+         )
     ))
 
 (defn render-part!
