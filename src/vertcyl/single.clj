@@ -5,9 +5,9 @@
 
 (def width 22)
 (def height 22)
-(def radius 100)
-(def plate-thickness 3)
-(def wall-thickness 8)
+(def radius 140)
+(def plate-thickness 4)
+(def wall-thickness 12)
 (def end-cutter-thickness 20)
 (def finger-rows 4)
 (def finger-columns 5)
@@ -27,7 +27,8 @@
 (def thumb-y 35)
 (def thumb-z 20)
 (def shell-gap 10)
-(def overall-height 106)
+(def overall-height 109)
+(def switch-support-radius 0.75)
 
 (def switch-cutter
   (let [extra (cube 3.5 15.6 40)
@@ -75,7 +76,7 @@
        (translate [0 (- 0 (/ end-cutter-thickness 2) wall-thickness) 0])))
 
 (def switch-support
-  (->> (cylinder 0.5 15)
+  (->> (cylinder switch-support-radius 15)
        (rotate (/ Math/PI 2) [0 1 0])
        (translate [0 (- (/ plate-thickness 2)) 0])))
 
@@ -157,11 +158,20 @@
 
 (defn place-all-thumb-shells
   [shell-block]
+  (list
   (for [row [-1.5 -0.5]
         column [-3.5 -2.5 1.5 2.5]]
     (->> shell-block
          (place-u10-block row column)
-         (rotate (/ Math/PI 2) [0 1 0]))))
+         (rotate (/ Math/PI 2) [0 1 0])))
+  (for [row [-1.5 -0.5]
+        column [-3.5 -2.5]]
+    (->> shell-block
+         (translate [0 (- wall-thickness plate-thickness) 0])
+         (place-u10-block row column)
+         (rotate (/ Math/PI 2) [0 1 0])))
+  
+  ))
 
 (def fingers
   (union 
@@ -170,7 +180,12 @@
              (place-all-finger-shells shell-plate-u10))
       (place-all-finger-blocks finger-cutter-u10)
       (place-all-finger-blocks switch-cutter))
-    (place-all-finger-blocks switch-support)))
+    (place-all-finger-blocks switch-support)
+    (for [row [-1.5 -0.5 0.5]]
+      (->> switch-support
+           (rotate (/ Math/PI 4) [0 0 1])
+           (translate [ 0 (- 0 (/ wall-thickness 2) switch-support-radius) 0])
+           (place-u10-block row -3)))))
 
 (def thumbs
   (union 
@@ -181,13 +196,15 @@
       (place-all-thumb-blocks finger-cutter-u10 finger-cutter-u15)
       (place-all-thumb-blocks switch-cutter switch-cutter))
     (place-all-thumb-blocks (rotate (/ Math/PI 2) [0 1 0] switch-support) 
-                            (rotate (/ Math/PI 2) [0 1 0] switch-support))))
+                            (rotate (/ Math/PI 2) [0 1 0] switch-support))
 
+      (->> switch-support
+           (translate [ 0 (- 0 (/ wall-thickness 2) switch-support-radius) 0])
+           (rotate (/ Math/PI 2) [ 0 1 0])
+           (rotate (/ Math/PI 4) [-1 0 0])
+           (place-u10-block 1.1 0))
+    ))
 
-(def shell-block
-  (->> (cube width (+ height plate-thickness) shell-thickness)
-       (rotate (/ Math/PI 2) [1 0 0])
-       (translate [0 (+ (/ shell-thickness 2) thumb-y) 0])))
 
 (defn place-row-10u-blocks
   [row block]
@@ -209,7 +226,7 @@
     (->> (cube plate-thickness (+ wall-thickness shell-gap) overall-height)
          (scale [1 3.1 1])
          (rotate (/ Math/PI 2) [0 1 0])
-         (translate [0 (/ shell-gap 2) (- (/ width 2))])
+         (translate [0 (/ shell-gap 2) (- 0 (/ width 2) (/ plate-thickness 2))])
          (place-u10-block 1 -0.5))
 
     (place-row-10u-blocks 1.5 end-cutter-u10)
