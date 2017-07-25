@@ -6,9 +6,9 @@
 (def mx-base-hieght 14)
 
 (def cutter-height 14)
-(def thickness 2)
-(def plate-width 21)
-(def plate-height 22)
+(def thickness 1.5)
+(def plate-width 20)
+(def plate-height 20)
 
 (def mx-cutter
   (let [extra (cube 3.5 15.6 cutter-height)

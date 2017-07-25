@@ -3,21 +3,17 @@
                                     hull]]
             [vertcyl.switch :refer [mx-cutter mx-plate plate-height
                                     plate-width]]
-            [vertcyl.utils :refer [render!]]))
+            [vertcyl.utils :refer [render! two-way-range]]))
 
 (def rows 5)
 (def columns 5)
-(def y-offset 3)
-(def z-offset 3)
+(def y-offset 2)
+(def z-offset 4)
 (def x-offset (+ plate-width 1))
-(def radius 140)
+(def radius 90)
 (def cirum (* Math/PI 2 radius))
 (def step (/ (* Math/PI 2) (/ cirum plate-height)))
 
-(defn two-way-range
-  [n]
-  (let [h (/ n 2)]
-    (map #(+ (- % h) 0.5) (range n))))
 
 (defn place
   [row column block]
@@ -67,10 +63,16 @@
         (place row column this-block)
         (place (+ row 1) column next-block))))))
 
+;(def switch-support
+;  (union
+;    (let [rod ])
+;    ))
+
 (def fingers-uncut
   (union
     (grid-keys mx-plate)
-    (bind-keys mx-plate)))
+    (bind-keys mx-plate)
+    ))
 
     
 (def fingers

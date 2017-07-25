@@ -1,6 +1,8 @@
 (ns vertcyl.core
   (:require [vertcyl.switch :refer [render-switches!]]
-            [vertcyl.fingers :refer [render-fingers!]])
+            [vertcyl.fingers :refer [render-fingers!]]
+            [vertcyl.thumbs :refer [render-thumbs!]]
+            [vertcyl.complete :refer [render-complete!]])
   (:gen-class))
 
 
@@ -8,5 +10,8 @@
   "I don't do a whole lot ... yet."
   [& args]
   (render-switches!)
-  (render-fingers!))
+  (render-fingers!)
+  (render-thumbs!)
+  (render-complete!)
+  )
 
