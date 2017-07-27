@@ -7,7 +7,7 @@
 
 (def rows 5)
 (def columns 5)
-(def y-offset 2)
+(def y-offset 1)
 (def z-offset 4)
 (def x-offset (+ plate-width 1))
 (def radius 90)
