@@ -1,5 +1,6 @@
 (ns vertcyl.thumbs
-  (:require [scad-clj.model :refer [difference rotate union scale hull]]
+  (:require [scad-clj.model :refer [difference rotate union scale hull 
+                                    translate]]
             [vertcyl.fingers :as fingers]
             [vertcyl.switch :refer [mx-cutter mx-plate plate-height 
                                     plate-width]]
